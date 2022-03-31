@@ -1,13 +1,14 @@
 // Copyright 2017, Paul DeMarco.
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-
+// @dart=2.10
 import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_blue/flutter_blue.dart';
+import 'package:flutter_blue_example/DashboardPage.dart';
 import 'package:flutter_blue_example/widgets.dart';
+import 'package:flutter_blue/flutter_blue.dart';
 
 void main() {
   runApp(FlutterBlueApp());
@@ -33,7 +34,7 @@ class FlutterBlueApp extends StatelessWidget {
 }
 
 class BluetoothOffScreen extends StatelessWidget {
-  const BluetoothOffScreen({Key key, this.state}) : super(key: key);
+  const BluetoothOffScreen({ Key key,  this.state}) : super(key: key);
 
   final BluetoothState state;
 
@@ -54,8 +55,8 @@ class BluetoothOffScreen extends StatelessWidget {
               'Bluetooth Adapter is ${state != null ? state.toString().substring(15) : 'not available'}.',
               style: Theme.of(context)
                   .primaryTextTheme
-                  .subhead
-                  .copyWith(color: Colors.white),
+                  .subtitle1
+                  ?.copyWith(color: Colors.white),
             ),
           ],
         ),
@@ -133,7 +134,7 @@ class FindDevicesScreen extends StatelessWidget {
         stream: FlutterBlue.instance.isScanning,
         initialData: false,
         builder: (c, snapshot) {
-          if (snapshot.data) {
+          if (snapshot.data == true) {
             return FloatingActionButton(
               child: Icon(Icons.stop),
               onPressed: () => FlutterBlue.instance.stopScan(),
@@ -152,7 +153,7 @@ class FindDevicesScreen extends StatelessWidget {
 }
 
 class DeviceScreen extends StatelessWidget {
-  const DeviceScreen({Key key, this.device}) : super(key: key);
+  const DeviceScreen({ Key key,  this.device}) : super(key: key);
 
   final BluetoothDevice device;
 
@@ -165,6 +166,13 @@ class DeviceScreen extends StatelessWidget {
       math.nextInt(255)
     ];
   }
+
+  List<int> _charWrite(BluetoothCharacteristic characteristic) {
+    return [
+      0x01
+    ];
+  }
+
 
   List<Widget> _buildServiceTiles(List<BluetoothService> services) {
     return services
@@ -223,7 +231,7 @@ class DeviceScreen extends StatelessWidget {
                   text = 'CONNECT';
                   break;
                 default:
-                  onPressed = null;
+                  onPressed = { } as VoidCallback;
                   text = snapshot.data.toString().substring(21).toUpperCase();
                   break;
               }
@@ -252,12 +260,13 @@ class DeviceScreen extends StatelessWidget {
                     : Icon(Icons.bluetooth_disabled),
                 title: Text(
                     'Device is ${snapshot.data.toString().split('.')[1]}.'),
+                onLongPress: () =>{device.discoverServices()},
                 subtitle: Text('${device.id}'),
                 trailing: StreamBuilder<bool>(
                   stream: device.isDiscoveringServices,
                   initialData: false,
                   builder: (c, snapshot) => IndexedStack(
-                    index: snapshot.data ? 1 : 0,
+                    index:  snapshot.data ? 1 : 0,
                     children: <Widget>[
                       IconButton(
                         icon: Icon(Icons.refresh),
@@ -305,3 +314,58 @@ class DeviceScreen extends StatelessWidget {
     );
   }
 }
+
+class DashboardScreen extends StatelessWidget {
+  const DashboardScreen({ Key key,  this.device}) : super(key: key);
+  final BluetoothDevice device;
+
+
+
+  @override
+  Widget build(BuildContext context)
+  {
+    return Scaffold(
+        appBar: AppBar(
+          title: Text('Dashboard'),
+            actions: <Widget>[
+              StreamBuilder<BluetoothDeviceState>(
+                stream: device.state,
+                initialData: BluetoothDeviceState.connecting,
+                builder: (c, snapshot) {
+                  VoidCallback onPressed;
+                  String text;
+                  switch (snapshot.data) {
+                    case BluetoothDeviceState.connected:
+                      onPressed = () => device.disconnect();
+                      text = 'DISCONNECT';
+                      break;
+                    case BluetoothDeviceState.disconnected:
+                      onPressed = () => device.connect();
+                      text = 'CONNECT';
+                      break;
+                    default:
+                      onPressed = { } as VoidCallback;
+                      text = snapshot.data.toString().substring(21).toUpperCase();
+                      break;
+                  }
+                  return FlatButton(
+                      onPressed: onPressed,
+                      child: Text(
+                        text,
+                        style: Theme.of(context)
+                            .primaryTextTheme
+                            .button
+                            .copyWith(color: Colors.white),
+                      ));
+                },
+              )
+            ]
+        ),
+
+    );
+
+  }
+}
+
+
+
