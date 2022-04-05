@@ -389,7 +389,6 @@ class ServiceTile extends StatelessWidget {
       return ListTile(
         title: Text('Service Characteristic'),
         subtitle:
-
             ///*0x*
             Text(
                 '${service.uuid.toString().toUpperCase() /*.substring(4, 8)*/}'),

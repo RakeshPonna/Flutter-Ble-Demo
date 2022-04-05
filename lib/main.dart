@@ -173,7 +173,6 @@ class DeviceScreen extends StatelessWidget {
     ];
   }
 
-
   List<Widget> _buildServiceTiles(List<BluetoothService> services) {
     return services
         .map(
@@ -318,8 +317,6 @@ class DeviceScreen extends StatelessWidget {
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({ Key key,  this.device}) : super(key: key);
   final BluetoothDevice device;
-
-
 
   @override
   Widget build(BuildContext context)
